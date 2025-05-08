@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default safe area insets -->
+    <dimen name="safe_area_top">0dp</dimen>
+    <dimen name="safe_area_bottom">0dp</dimen>
+</resources>
