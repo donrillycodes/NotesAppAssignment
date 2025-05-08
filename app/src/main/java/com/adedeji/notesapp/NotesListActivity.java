@@ -92,6 +92,38 @@ public class NotesListActivity extends AppCompatActivity {
             }
         });
     }
+    private void refreshNotesList() {
+        DatabaseReference databaseNotes = FirebaseDatabase.getInstance().getReference("notes");
+        databaseNotes.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                noteList.clear();
+
+                for (DataSnapshot noteSnapshot : dataSnapshot.getChildren()) {
+                    String title = noteSnapshot.child("title").getValue(String.class);
+                    String content = noteSnapshot.child("content").getValue(String.class);
+                    if (title != null && content != null) {
+                        noteList.add(title + "\n" + content);
+                    }
+                }
+
+                adapter.notifyDataSetChanged();  // Update the UI with new notes
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(NotesListActivity.this, "Failed to refresh notes", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshNotesList();  // Reload notes when returning to this screen
+    }
+
 
     @Override
     public boolean onSupportNavigateUp() {

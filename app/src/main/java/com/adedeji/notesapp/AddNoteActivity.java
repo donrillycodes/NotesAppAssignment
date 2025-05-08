@@ -76,6 +76,7 @@ public class AddNoteActivity extends AppCompatActivity {
             databaseNotes.child(noteId).setValue(note)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(AddNoteActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK);
                         finish();  // Close this activity and return to the notes list
                     })
                     .addOnFailureListener(e -> {
