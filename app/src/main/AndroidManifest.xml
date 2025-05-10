@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.adedeji.notesapp">
 
-    <!-- Add Internet permission -->
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required permission for Firebase -->
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -11,16 +11,16 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NotesApp">
-        <activity
-            android:name=".SettingsActivity"
-            android:parentActivityName=".MainActivity" />
-        <activity
-            android:name=".AddNoteActivity"
-            android:parentActivityName=".NotesListActivity" />
-        <activity
-            android:name=".NotesListActivity"
-            android:parentActivityName=".MainActivity" />
+        android:theme="@style/AppTheme">
+        <meta-data
+            android:name="com.google.firebase.database.logEnabled"
+            android:value="true" />
+        <activity android:name=".AddNoteActivity"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true">

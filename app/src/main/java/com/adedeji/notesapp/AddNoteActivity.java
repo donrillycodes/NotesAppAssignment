@@ -2,97 +2,79 @@ package com.adedeji.notesapp;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Guideline;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.appcompat.widget.Toolbar;
 
+import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import java.util.HashMap;
+import java.util.Objects;
 
 public class AddNoteActivity extends AppCompatActivity {
-
-    private static final String TAG = "AddNoteActivity";
+    private DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_note);
 
-        // Adjust UI for safe areas
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.guidelineTop), (v, insets) -> {
-            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+        // Initialize Firebase
+        databaseReference = FirebaseDatabase.getInstance().getReference("notes");
 
-            Guideline guidelineTop = findViewById(R.id.guidelineTop);
-            Guideline guidelineBottom = findViewById(R.id.guidelineBottom);
+        // Setup Toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-            ConstraintLayout.LayoutParams paramsTop = (ConstraintLayout.LayoutParams) guidelineTop.getLayoutParams();
-            paramsTop.guideBegin = topInset;
-            guidelineTop.setLayoutParams(paramsTop);
-
-            ConstraintLayout.LayoutParams paramsBottom = (ConstraintLayout.LayoutParams) guidelineBottom.getLayoutParams();
-            paramsBottom.guideEnd = bottomInset;
-            guidelineBottom.setLayoutParams(paramsBottom);
-
-            return insets;
-        });
-
-        EditText etTitle = findViewById(R.id.etTitle);
-        EditText etContent = findViewById(R.id.etContent);
-        Button btnSave = findViewById(R.id.btnSave);
+        EditText etTitle = findViewById(R.id.etNoteTitle);
+        EditText etContent = findViewById(R.id.etNoteContent);
+        Button btnSave = findViewById(R.id.btnSaveNote);
 
         btnSave.setOnClickListener(v -> {
             String title = etTitle.getText().toString().trim();
             String content = etContent.getText().toString().trim();
 
-            // Validate input fields
-            if (title.isEmpty() || content.isEmpty()) {
-                Toast.makeText(AddNoteActivity.this, "Please enter both title and content", Toast.LENGTH_SHORT).show();
+            if (title.isEmpty()) {
+                etTitle.setError("Title is required");
                 return;
             }
 
-            // Save note to Firebase
-            DatabaseReference databaseNotes = FirebaseDatabase.getInstance().getReference("notes");
-            String noteId = databaseNotes.push().getKey();
-
-            if (noteId == null) {
-                Toast.makeText(AddNoteActivity.this, "Error generating note ID", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Failed to generate note ID from Firebase");
+            if (content.isEmpty()) {
+                etContent.setError("Content is required");
                 return;
             }
 
-            HashMap<String, Object> note = new HashMap<>();
-            note.put("title", title);
-            note.put("content", content);
+            // Disable button to prevent multiple clicks
+            btnSave.setEnabled(false);
+            btnSave.setText("Saving...");
 
-            databaseNotes.child(noteId).setValue(note)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(AddNoteActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK);
-                        finish();  // Close this activity and return to the notes list
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error saving note", e);
-                        Toast.makeText(AddNoteActivity.this, "Failed to save note: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            // Create new note
+            Note note = new Note(title, content);
+
+            // Push to Firebase
+            databaseReference.push().setValue(note)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(AddNoteActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
+                            setResult(RESULT_OK); // Optional: Signal success to MainActivity
+                            finish();
+                        } else {
+                            Toast.makeText(AddNoteActivity.this, "Failed to save note", Toast.LENGTH_SHORT).show();
+                            Log.e("AddNoteActivity", "Error saving note", task.getException());
+                            btnSave.setEnabled(true); // Re-enable button on failure
+                        }
                     });
         });
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish();
+        onBackPressed();
         return true;
     }
 }

@@ -2,50 +2,80 @@ package com.adedeji.notesapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
+import android.util.Log;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Guideline;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private RecyclerView recyclerViewNotes;
+    private NoteAdapter noteAdapter;
+    private List<Note> notesList;
+    private DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Handle notch/safe area
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.guidelineTop), (v, insets) -> {
-            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-            int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+        // Initialize Firebase
+        databaseReference = FirebaseDatabase.getInstance().getReference("notes");
 
-            Guideline guidelineTop = findViewById(R.id.guidelineTop);
-            Guideline guidelineBottom = findViewById(R.id.guidelineBottom);
 
-            ConstraintLayout.LayoutParams paramsTop = (ConstraintLayout.LayoutParams) guidelineTop.getLayoutParams();
-            paramsTop.guideBegin = topInset;
-            guidelineTop.setLayoutParams(paramsTop);
+        // Set up Toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-            ConstraintLayout.LayoutParams paramsBottom = (ConstraintLayout.LayoutParams) guidelineBottom.getLayoutParams();
-            paramsBottom.guideEnd = bottomInset;
-            guidelineBottom.setLayoutParams(paramsBottom);
+        // Setup RecyclerView
+        recyclerViewNotes = findViewById(R.id.recyclerViewNotes);
+        recyclerViewNotes.setLayoutManager(new LinearLayoutManager(this));
+        notesList = new ArrayList<>();
+        noteAdapter = new NoteAdapter(notesList);
+        recyclerViewNotes.setAdapter(noteAdapter);
 
-            return insets;
+        // Load notes from Firebase
+        loadNotes();
+
+        // Add Note Button
+        FloatingActionButton fab = findViewById(R.id.fabAddNote);
+        fab.setOnClickListener(view -> {
+            startActivity(new Intent(MainActivity.this, AddNoteActivity.class));
         });
+    }
 
-        Button btnViewNotes = findViewById(R.id.btnViewNotes);
-        Button btnSettings = findViewById(R.id.btnSettings);
+    private void loadNotes() {
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                notesList.clear();
+                for (DataSnapshot noteSnapshot : dataSnapshot.getChildren()) {
+                    Note note = noteSnapshot.getValue(Note.class);
+                    if (note != null) {
+                        note.setId(noteSnapshot.getKey());
+                        notesList.add(note);
+                    }
+                }
+                noteAdapter.notifyDataSetChanged();
+            }
 
-        btnViewNotes.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, NotesListActivity.class));
-        });
-
-        btnSettings.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle possible errors
+                Log.e("MainActivity", "Database error: " + databaseError.getMessage());
+                Toast.makeText(MainActivity.this, "Failed to load notes", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
