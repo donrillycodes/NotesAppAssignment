@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.adedeji.notesapp" />
+                  <option name="mobileSdkAppId" value="1:772756058198:android:1eac230f4fa23dac090bf7" />
+                  <option name="projectId" value="notes-1f6f5" />
+                  <option name="projectNumber" value="772756058198" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

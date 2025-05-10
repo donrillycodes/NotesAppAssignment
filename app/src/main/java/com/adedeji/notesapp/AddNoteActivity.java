@@ -22,14 +22,23 @@ public class AddNoteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_note);
 
-        // Initialize Firebase
-        databaseReference = FirebaseDatabase.getInstance().getReference("notes");
+        // Initialize Firebase with proper configuration
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        databaseReference = database.getReference("notes");
 
-        // Setup Toolbar
+        setupToolbar();
+        setupSaveButton();
+    }
+
+    private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+    }
 
+    private void setupSaveButton() {
         EditText etTitle = findViewById(R.id.etNoteTitle);
         EditText etContent = findViewById(R.id.etNoteContent);
         Button btnSave = findViewById(R.id.btnSaveNote);
@@ -43,38 +52,28 @@ public class AddNoteActivity extends AppCompatActivity {
                 return;
             }
 
-            if (content.isEmpty()) {
-                etContent.setError("Content is required");
-                return;
-            }
-
-            // Disable button to prevent multiple clicks
-            btnSave.setEnabled(false);
-            btnSave.setText("Saving...");
-
-            // Create new note
-            Note note = new Note(title, content);
-
-            // Push to Firebase
-            databaseReference.push().setValue(note)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(AddNoteActivity.this, "Note saved", Toast.LENGTH_SHORT).show();
-                            setResult(RESULT_OK); // Optional: Signal success to MainActivity
-                            finish();
-                        } else {
-                            Toast.makeText(AddNoteActivity.this, "Failed to save note", Toast.LENGTH_SHORT).show();
-                            Log.e("AddNoteActivity", "Error saving note", task.getException());
-                            btnSave.setEnabled(true); // Re-enable button on failure
-                        }
-                    });
+            saveNoteToFirebase(title, content);
         });
+    }
 
+    private void saveNoteToFirebase(String title, String content) {
+        Note note = new Note(title, content);
+        databaseReference.push()
+                .setValue(note)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(this, "Failed to save note", Toast.LENGTH_SHORT).show();
+                        Log.e("AddNoteActivity", "Error saving note", task.getException());
+                    }
+                });
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        finish();
         return true;
     }
 }

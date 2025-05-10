@@ -1,15 +1,14 @@
 package com.adedeji.notesapp;
 
-import java.util.Date;
-
 public class Note {
     private String id;
     private String title;
     private String content;
     private long timestamp;
 
+    // Required empty constructor for Firebase
     public Note() {
-        // Required empty constructor for Firebase
+        this.timestamp = System.currentTimeMillis();
     }
 
     public Note(String title, String content) {

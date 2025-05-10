@@ -6,18 +6,24 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.text.SimpleDateFormat;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
-    private List<Note> notesList;
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+    private List<Note> notes;
+    private static final SimpleDateFormat dateFormat =
+            new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
 
-    public NoteAdapter(List<Note> notesList) {
-        this.notesList = notesList;
+    public NoteAdapter(List<Note> notes) {
+        this.notes = notes != null ? notes : new ArrayList<>();
+    }
+
+    public void updateNotes(List<Note> newNotes) {
+        this.notes = newNotes != null ? newNotes : new ArrayList<>();
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -30,34 +36,38 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-        Note note = notesList.get(position);
-        holder.tvNoteTitle.setText(note.getTitle());
-        holder.tvNoteContent.setText(note.getContent());
-
-        // Format timestamp
-        Date date = new Date(note.getTimestamp());
-        holder.tvNoteDate.setText(dateFormat.format(date));
+        Note note = notes.get(position);
+        holder.bind(note);
     }
 
     @Override
     public int getItemCount() {
-        return notesList.size();
-    }
-
-    public void updateNotes(List<Note> newNotes) {
-        notesList.clear();
-        notesList.addAll(newNotes);
-        notifyDataSetChanged();
+        return notes.size();
     }
 
     static class NoteViewHolder extends RecyclerView.ViewHolder {
-        TextView tvNoteTitle, tvNoteContent, tvNoteDate;
+        private final TextView tvNoteTitle;
+        private final TextView tvNoteContent;
+        private final TextView tvNoteDate;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             tvNoteTitle = itemView.findViewById(R.id.tvNoteTitle);
             tvNoteContent = itemView.findViewById(R.id.tvNoteContent);
             tvNoteDate = itemView.findViewById(R.id.tvNoteDate);
+        }
+
+        public void bind(Note note) {
+            tvNoteTitle.setText(note.getTitle());
+            tvNoteContent.setText(note.getContent());
+
+            // Format timestamp
+            if (note.getTimestamp() > 0) {
+                Date date = new Date(note.getTimestamp());
+                tvNoteDate.setText(dateFormat.format(date));
+            } else {
+                tvNoteDate.setText("--");
+            }
         }
     }
 }
